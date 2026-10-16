@@ -36,6 +36,18 @@ Recurring failure family, each entry bought with real wasted hours:
 
 The shared lesson: **instruments report their own success, not the truth of the thing measured.** Every "SENT", every exit 0, every green check answers "did I run?" — not "is it so?"
 
+## The suite's own records are part of the instrument
+
+A verification suite writes reports about its runs — and those reports are the least verified thing in the room, because verification points outward by definition. Real case, two incidents on consecutive days in the same suite: date-only report filenames let a same-day rerun silently overwrite the committed reports; fixed to date+minute, the next day two ~15-second runs landed in the same minute and the *passing* run overwrote the *failing* one — the one that mattered.
+
+The generalization: **"append-only" enforced by timestamp granularity is a race, not a guarantee.** Any finer stamp only narrows the window. History an instrument writes about itself needs a categorical guard — refuse to write if the file exists:
+
+```sh
+[ -e "$REPORT" ] && { echo "refusing to overwrite $REPORT" >&2; exit 99; }
+```
+
+Timestamps in the filename are for uniqueness in normal operation; the existence check is what makes the history real. Keep the reports in version control as a second layer — a committed report can be restored; an overwritten uncommitted one is gone, and with it the evidence the suite exists to produce.
+
 ## Scope the claim to what actually ran
 
 The proof defines the claim's boundary. If the oracle covered `get_Z` under history-conditioning for dynamic models, the finding says exactly that — it does not say "the package's math is wrong," and the filing explicitly names what was checked and found *correct* (in the real case: the forward algorithm, and therefore the likelihoods, were verified unaffected — saying so is what lets a maintainer triage in minutes instead of panicking).
